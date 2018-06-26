@@ -1,7 +1,7 @@
 # EOS Paper Wallet
 
 ## Instructions
-You can visit https://eoscafe.github.io/eos-paper-wallet/ or download the files in this github to run locally.
+You can visit https://resilience-me.github.io/eos-paper-wallet or download the files in this github to run locally.
 
 ## Information
 There are 3 files to this paper wallet:
