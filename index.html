@@ -7,63 +7,106 @@
 </head>
 
 <body>
+<div>
   <h1 class="no-print">EOS Paper Wallet</h1>
 
-  <div style="outline-style: solid; outline-width: thin;">
-    <div class="qr">
-      <h3 style="margin:0; padding-left:10.5px;">Public Key</h3>
-      <canvas style="padding-left: 10px;" id="publicKeyCanvas"></canvas>
+  <input type="number" id="generateHowMany" value="1" class="input no-print">
+  <button class="button button_primary no-print" style="margin-top:25px" onclick="generate();"> Generate </button>
+  <button class="button button_primary no-print" onclick="window.print();"> Print </button>
+  <a href="https://github.com/eoscafe/eos-paper-wallet"  target="_blank">
+  <button class="button button_primary no-print"> Full Source Code </button></a>
+
+</div>
+
+<div id="container"></div>
+
+<template id="paperWalletTemplate">
+
+  <div style="outline-style: solid; outline-width: thin; margin-top:20px; margin-bottom:20px">
+    <div class="qr qr-code-1">
+        <img style="padding-left: 10px;" id="publicKeyCanvas" src="">
+        <p class="print-text">Public Key</p>
     </div>
 
     <div class="logo-container">
-      <img class="logo-image" src="eos_cafe_calgary.png" alt="EOS Cafe">
+      <img class="logo-image" src="eoslogo.jpg">
     </div>
 
-    <div class="qr">
-      <h3 style="margin-top:20px;margin-bottom: 0;padding-left:10.5px;">Private Key </h1>
-      <canvas style="padding-left: 10px;" id="privateKeyCanvas"></canvas>
+    <div class="qr qr-code-1">
+      <img style="padding-left: 10px;" id="privateKeyCanvas" src="">
+      <p class="print-text">Private Key</p>
     </div>
-
     <div class="key-text">
-      <h3 style="margin-bottom: 0px;">Public Key <span style="color:green">(SHARE)</span></h1>
-      <div id="publicKey"> </div>
-      <h3 style="margin-bottom: 0px;">Private Key <span style="color:red">(DON'T SHARE)</span></h1>
+      <p style="margin-bottom: 0px;">Public Key:</p>
+      <div id="publicKey"></div>
+      <p style="margin-bottom: 0px;">Private Key:</p>
       <div id="privateKey"></div>
     </div>
   </div>
 
-  <button class="button button_primary no-print" style="margin-top:25px" onclick="initialize();"> Re-Generate </button>
-  <button class="button button_primary no-print" onclick="window.print();"> Print </button>
-  <a href="https://github.com/eoscafe/eos-paper-wallet"  target="_blank">
-    <button class="button button_primary no-print"> Full Source Code </button>
-  </a>
+</template>
 
-  <script>
-    var ecc = eosjs_ecc
+<script>
 
-    function initialize(){
-      // Create a new random private key
-      ecc.randomKey().then(privateWif =>  {
-        let publicKey = ecc.privateToPublic(privateWif)
+    var ecc = eosjs_ecc;
 
-        document.getElementById("publicKey").textContent = publicKey;
-        var qr = new QRious({
-          element: document.getElementById('publicKeyCanvas'),
-          value: publicKey,
-          size: 150
-        });
+    function generate() {
 
-        document.getElementById("privateKey").textContent = privateWif;
-        var qr = new QRious({
-          element: document.getElementById('privateKeyCanvas'),
-          value: publicKey,
-          size: 150
-        });
-      })
+        /* Reset the wallet container */
+
+        if(document.querySelector("#walletsLoaded")) {
+            document.querySelector('#walletsLoaded').remove();
+        }
+
+        /* Load a new container */
+
+        var div = document.createElement("div");
+        div.id = "walletsLoaded";
+        
+        document.querySelector("#container").appendChild(div);
+
+        /* How many wallets to generate? */
+
+        var quantity = document.querySelector("#generateHowMany").value;    
+
+        /* Generate the wallets and load them in the DOM */
+
+        for(i = 0; i < quantity; i++) {
+
+            /* Load the paper wallet template */
+            var content = document.querySelector('#paperWalletTemplate').content;
+            
+            // Create a new random private key
+            ecc.randomKey().then(privateWif =>  {
+
+                let publicKey = ecc.privateToPublic(privateWif);
+
+                /* Write data to the template */
+
+                content.querySelector('#publicKey').textContent = publicKey;
+                var qr = new QRious({
+                    value: publicKey,
+                    size: 150
+                });     
+                content.querySelector('#publicKeyCanvas').src = qr.toDataURL();
+                
+                content.querySelector('#privateKey').textContent = privateWif;
+                var qr = new QRious({
+                    value: privateWif,
+                    size: 150
+                });       
+                content.querySelector('#privateKeyCanvas').src = qr.toDataURL();
+
+                /* Append the template instance to the DOM */
+
+                var clone = document.importNode(content, true);
+                document.querySelector('#walletsLoaded').appendChild(clone);
+
+            });
+        }
     }
 
-    initialize()
-  </script>
+</script>
 
   <style type="text/css" scoped>
     html {
@@ -81,6 +124,7 @@
       font-family: "Helvetica Neue", Arial, sans-serif;
       line-height: 1.5;
       width:700px;
+
     }
 
     .content {
@@ -88,6 +132,28 @@
       width: 94%;
       max-width: 600px;
       text-align: center;
+    }
+
+    .print-text {
+        position: relative;
+        transform: rotate(-90deg);
+    }
+    .qr {
+      width:30%;
+      display:inline-block;
+      padding-left: 15px;
+      margin-top:20px;
+    }
+    .qr-code-1 .print-text {
+        left: 75px;
+        bottom: 150px;
+        margin:0;
+    }
+
+    .qr-code-2 .print-text {
+        left: 75px;
+        bottom: 150px;
+        margin:0;
     }
 
     .button {
@@ -130,29 +196,36 @@
       background-color: #e98724;
     }
 
+    .input {
+      padding: 0.75rem 1rem;
+      border-radius: 0.317rem;
+      text-decoration: none;
+      font-weight: 700;
+      font-size: 1rem;
+      line-height: 1.5;
+      font-family: "Helvetica Neue", Arial, sans-serif;
+    }
+
     .logo-container {
       width:37%;
       display:inline-block;
-      padding-left: 15px;
+      padding-left: 70px;
       vertical-align:top;
     }
 
     .logo-image {
       padding-top: 50px;
-      margin-left: 10px;
-      width: 200px;
-    }
-    .qr {
-      width:30%;
-      display:inline-block;
-      padding-left: 15px;
+      width: 100px;
     }
 
     .key-text {
+        margin-top: -25px;
         padding-left: 27px;
         display: block;
         vertical-align: top;
-        padding-bottom: 20px;
+        padding-bottom: 10px;
+        font-size: 14px;
+        font-family: Menlo,Monaco,Consolas,Courier New,monospace;
     }
 
     @media print
@@ -162,6 +235,7 @@
             display: none !important;
         }
     }
+
   </style>
 </body>
 </html>
